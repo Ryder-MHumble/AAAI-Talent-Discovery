@@ -28,10 +28,32 @@ AAAI_INVITED_SPEAKERS_URL=https://aaai.org/conference/aaai/aaai-26/invited-speak
 AAAI_TECHNICAL_TRACK_URL=https://aaai.org/conference/aaai/aaai-26/technical-track/
 
 # ========================================
+# Firecrawl Configuration (Optional)
+# ========================================
+# Enhanced web scraping with JavaScript rendering support
+# Get API key from: https://www.firecrawl.dev/
+# 
+# Benefits:
+# - ✅ Renders JavaScript (React/Vue pages)
+# - ✅ Bypasses anti-scraping (Cloudflare, etc.)
+# - ✅ Auto content cleaning (removes ads/navigation)
+# - ✅ Markdown output (structured format)
+# 
+# Leave empty to use basic httpx scraping (free but limited)
+FIRECRAWL_API_KEY=
+FIRECRAWL_ENABLED=false
+
+# Set to true to enable Firecrawl (requires API key above)
+# Cost: ~$0.001 per page scrape
+# Recommended for production with 30%+ JavaScript-rendered pages
+
+# ========================================
 # Instructions
 # ========================================
 # 1. Get your SiliconFlow API key from: https://cloud.siliconflow.cn/
-# 2. Replace "sk-your-actual-api-key-here" with your actual key
-# 3. Save this file as .env (without the .txt extension)
-# 4. Run: python app/main.py
+# 2. (Optional) Get Firecrawl API key from: https://www.firecrawl.dev/
+# 3. Replace "sk-your-actual-api-key-here" with your actual key
+# 4. Set FIRECRAWL_ENABLED=true to enable enhanced scraping
+# 5. Save this file as .env (without the .txt extension)
+# 6. Run: python app/main.py
 

@@ -1,4 +1,4 @@
-"""LangGraph State Definitions"""
+"""LangGraph状态定义"""
 
 from typing import TypedDict, List, Literal
 from app.api.models import CandidateProfile
@@ -6,13 +6,13 @@ from app.api.models import CandidateProfile
 
 class AgentState(TypedDict):
     """
-    Shared state for the agent workflow.
+    智能体工作流的共享状态
     
-    This state is passed between all nodes in the LangGraph.
+    此状态在LangGraph的所有节点之间传递
     """
     job_id: str
-    candidates: List[CandidateProfile]  # The main list of all candidates
-    current_index: int  # Processing pointer for the current candidate
-    is_complete: bool  # Flag indicating if all processing is done
-    error_message: str  # Optional error tracking
+    candidates: List[CandidateProfile]  # 所有候选人的主列表
+    current_index: int  # 当前候选人的处理指针
+    is_complete: bool  # 标志所有处理是否完成
+    error_message: str  # 可选的错误跟踪
 

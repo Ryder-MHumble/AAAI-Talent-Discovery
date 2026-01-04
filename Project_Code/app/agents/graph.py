@@ -1,4 +1,4 @@
-"""LangGraph Workflow Definition"""
+"""LangGraph工作流定义"""
 
 from langgraph.graph import StateGraph, END
 from typing import Literal
@@ -15,81 +15,81 @@ logger = logging.getLogger(__name__)
 
 def should_continue_processing(state: AgentState) -> Literal["detective", "complete"]:
     """
-    Routing function to determine if we should continue processing or complete.
+    路由函数，确定是否继续处理或完成
     
     Args:
-        state: Current agent state
+        state: 当前智能体状态
         
     Returns:
-        Next node name or "complete"
+        下一个节点名称或"complete"
     """
     candidates = state["candidates"]
     current_index = state["current_index"]
     
-    # Check if there are any more PENDING candidates to process
+    # 检查是否还有待处理的PENDING候选人
     remaining = any(
         c.status == "PENDING" 
         for c in candidates[current_index:]
     )
     
     if remaining:
-        logger.info(f"[Router] Continuing processing (index={current_index})")
+        logger.info(f"[路由器] 继续处理 (index={current_index})")
         return "detective"
     else:
-        logger.info("[Router] All candidates processed, completing")
+        logger.info("[路由器] 所有候选人已处理完成")
         state["is_complete"] = True
         return "complete"
 
 
 def create_agent_graph() -> StateGraph:
     """
-    Create and return the agent workflow graph.
+    创建并返回智能体工作流图
     
-    Workflow:
-    1. Ingestion -> Load candidates from AAAI
-    2. Filter -> Mark non-target candidates as SKIPPED
-    3. Detective -> Search for homepages (loops for each candidate)
-    4. Auditor -> Verify and extract information
-    5. Router -> Check if more candidates need processing
+    工作流:
+    1. Ingestion -> 从AAAI加载候选人
+    2. Filter -> 将非目标候选人标记为SKIPPED
+    3. Detective -> 搜索主页（为每个候选人循环）
+    4. Auditor -> 验证并提取信息
+    5. Router -> 检查是否需要处理更多候选人
     
     Returns:
-        Compiled StateGraph
+        已编译的StateGraph
     """
-    # Initialize the graph
+    # 初始化图
     workflow = StateGraph(AgentState)
     
-    # Add nodes
+    # 添加节点
     workflow.add_node("ingestion", ingestion_node)
     workflow.add_node("filter", filter_node)
     workflow.add_node("detective", detective_node)
     workflow.add_node("auditor", auditor_node)
     
-    # Define edges
+    # 定义边
     workflow.set_entry_point("ingestion")
     
     # Ingestion -> Filter
     workflow.add_edge("ingestion", "filter")
     
-    # Filter -> Detective (start processing)
+    # Filter -> Detective (开始处理)
     workflow.add_edge("filter", "detective")
     
-    # Detective -> Auditor (after finding a URL)
+    # Detective -> Auditor (找到URL后)
     workflow.add_edge("detective", "auditor")
     
-    # Auditor -> Router (check if more to process)
+    # Auditor -> Router (检查是否需要处理更多)
     workflow.add_conditional_edges(
         "auditor",
         should_continue_processing,
         {
-            "detective": "detective",  # Loop back to process next candidate
+            "detective": "detective",  # 循环回去处理下一个候选人
             "complete": END
         }
     )
     
-    # Compile the graph
+    # 编译图
     app = workflow.compile()
     
-    logger.info("[Graph] Agent workflow compiled successfully")
+    logger.info("[图] 智能体工作流编译成功")
     
     return app
 

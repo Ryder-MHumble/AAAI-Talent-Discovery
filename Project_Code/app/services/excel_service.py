@@ -1,4 +1,4 @@
-"""Excel Export Service"""
+"""Excel导出服务"""
 
 import pandas as pd
 from typing import List
@@ -12,54 +12,54 @@ logger = logging.getLogger(__name__)
 
 def generate_excel_report(candidates: List[CandidateProfile], job_id: str) -> BytesIO:
     """
-    Generate an Excel file from candidate results.
+    从候选人结果生成Excel文件
     
     Args:
-        candidates: List of CandidateProfile objects
-        job_id: Job identifier
+        candidates: CandidateProfile对象列表
+        job_id: 任务标识符
         
     Returns:
-        BytesIO buffer containing the Excel file
+        包含Excel文件的BytesIO缓冲区
     """
-    # Filter to only include verified candidates
+    # 仅筛选验证通过的候选人
     verified = [c for c in candidates if c.status == "VERIFIED"]
     
-    logger.info(f"[ExcelService] Generating report for {len(verified)} verified candidates")
+    logger.info(f"[Excel服务] 为{len(verified)}位验证通过的候选人生成报告")
     
-    # Prepare data for DataFrame
+    # 为DataFrame准备数据
     data = []
     for candidate in verified:
         data.append({
-            "Name": candidate.name,
-            "Chinese Name": candidate.name_cn or "N/A",
-            "Current Affiliation": candidate.affiliation,
-            "Role": candidate.role,
-            "Homepage": candidate.homepage or "N/A",
-            "Email": candidate.email or "N/A",
-            "Bachelor University": candidate.bachelor_univ or "N/A",
-            "Verification Time": candidate.verification_time.strftime("%Y-%m-%d %H:%M:%S") if candidate.verification_time else "N/A"
+            "姓名": candidate.name,
+            "中文姓名": candidate.name_cn or "无",
+            "当前单位": candidate.affiliation,
+            "角色": candidate.role,
+            "主页": candidate.homepage or "无",
+            "邮箱": candidate.email or "无",
+            "本科院校": candidate.bachelor_univ or "无",
+            "验证时间": candidate.verification_time.strftime("%Y-%m-%d %H:%M:%S") if candidate.verification_time else "无"
         })
     
-    # Create DataFrame
+    # 创建DataFrame
     df = pd.DataFrame(data)
     
-    # Create Excel file in memory
+    # 在内存中创建Excel文件
     buffer = BytesIO()
     
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Verified Scholars', index=False)
+        df.to_excel(writer, sheet_name='已验证学者', index=False)
         
-        # Also add a summary sheet
+        # 添加汇总表
         summary_data = {
-            "Metric": [
-                "Job ID",
-                "Total Candidates",
-                "Verified",
-                "Failed",
-                "Skipped",
-                "Generated At"
+            "指标": [
+                "任务ID",
+                "总候选人数",
+                "已验证",
+                "失败",
+                "跳过",
+                "生成时间"
             ],
-            "Value": [
+            "值": [
                 job_id,
                 len(candidates),
                 len([c for c in candidates if c.status == "VERIFIED"]),
@@ -69,51 +69,51 @@ def generate_excel_report(candidates: List[CandidateProfile], job_id: str) -> By
             ]
         }
         summary_df = pd.DataFrame(summary_data)
-        summary_df.to_excel(writer, sheet_name='Summary', index=False)
+        summary_df.to_excel(writer, sheet_name='汇总', index=False)
     
     buffer.seek(0)
     
-    logger.info(f"[ExcelService] Excel report generated successfully")
+    logger.info(f"[Excel服务] Excel报告生成成功")
     
     return buffer
 
 
 def generate_full_report(candidates: List[CandidateProfile], job_id: str) -> BytesIO:
     """
-    Generate a comprehensive Excel file with all candidates (all statuses).
+    生成包含所有候选人（所有状态）的完整Excel文件
     
     Args:
-        candidates: List of CandidateProfile objects
-        job_id: Job identifier
+        candidates: CandidateProfile对象列表
+        job_id: 任务标识符
         
     Returns:
-        BytesIO buffer containing the Excel file
+        包含Excel文件的BytesIO缓冲区
     """
-    logger.info(f"[ExcelService] Generating full report for {len(candidates)} candidates")
+    logger.info(f"[Excel服务] 为{len(candidates)}位候选人生成完整报告")
     
-    # Prepare data for DataFrame
+    # 为DataFrame准备数据
     data = []
     for candidate in candidates:
         data.append({
-            "Name": candidate.name,
-            "Chinese Name": candidate.name_cn or "",
-            "Affiliation": candidate.affiliation,
-            "Role": candidate.role,
-            "Status": candidate.status,
-            "Homepage": candidate.homepage or "",
-            "Email": candidate.email or "",
-            "Bachelor University": candidate.bachelor_univ or "",
-            "Skip Reason": candidate.skip_reason or "",
-            "Verification Time": candidate.verification_time.strftime("%Y-%m-%d %H:%M:%S") if candidate.verification_time else ""
+            "姓名": candidate.name,
+            "中文姓名": candidate.name_cn or "",
+            "单位": candidate.affiliation,
+            "角色": candidate.role,
+            "状态": candidate.status,
+            "主页": candidate.homepage or "",
+            "邮箱": candidate.email or "",
+            "本科院校": candidate.bachelor_univ or "",
+            "跳过原因": candidate.skip_reason or "",
+            "验证时间": candidate.verification_time.strftime("%Y-%m-%d %H:%M:%S") if candidate.verification_time else ""
         })
     
     df = pd.DataFrame(data)
     
-    # Create Excel file
+    # 创建Excel文件
     buffer = BytesIO()
     
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='All Candidates', index=False)
+        df.to_excel(writer, sheet_name='所有候选人', index=False)
     
     buffer.seek(0)
     

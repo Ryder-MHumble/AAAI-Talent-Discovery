@@ -1,4 +1,4 @@
-"""Ingestion Node - Fetches and parses AAAI-26 candidate data"""
+"""采集节点 - 获取并解析AAAI-26候选人数据"""
 
 import httpx
 from bs4 import BeautifulSoup
@@ -12,7 +12,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-# Mock data for DEV environment
+# 开发环境的模拟数据
 MOCK_CANDIDATES = [
     CandidateProfile(
         name="Haoyang Li",
@@ -49,13 +49,13 @@ MOCK_CANDIDATES = [
 
 async def scrape_aaai_page(url: str) -> List[CandidateProfile]:
     """
-    Scrape AAAI website to extract candidate information.
+    抓取AAAI网站以提取候选人信息
     
     Args:
-        url: AAAI page URL
+        url: AAAI页面URL
         
     Returns:
-        List of CandidateProfile objects
+        CandidateProfile对象列表
     """
     candidates = []
     
@@ -64,27 +64,27 @@ async def scrape_aaai_page(url: str) -> List[CandidateProfile]:
             response = await client.get(url)
             
             if response.status_code != 200:
-                logger.error(f"Failed to fetch {url}: {response.status_code}")
+                logger.error(f"获取{url}失败: {response.status_code}")
                 return candidates
             
             soup = BeautifulSoup(response.text, 'lxml')
             
-            # This is a placeholder parser - actual implementation would depend on AAAI's HTML structure
-            # Look for common patterns like:
-            # - <h3> or <h4> tags for names
-            # - Adjacent <p> or <span> for affiliations
+            # 这是一个占位解析器 - 实际实现取决于AAAI的HTML结构
+            # 查找常见模式如:
+            # - <h3>或<h4>标签用于姓名
+            # - 相邻的<p>或<span>用于所属单位
             
-            # Example parsing logic (adapt based on actual HTML structure)
+            # 示例解析逻辑（根据实际HTML结构调整）
             for item in soup.find_all(['div', 'li'], class_=['speaker', 'author', 'participant']):
                 name = None
                 affiliation = None
                 
-                # Try to extract name
+                # 尝试提取姓名
                 name_tag = item.find(['h3', 'h4', 'strong', 'b'])
                 if name_tag:
                     name = name_tag.get_text(strip=True)
                 
-                # Try to extract affiliation
+                # 尝试提取所属单位
                 aff_tag = item.find(['p', 'span', 'em'], class_=['affiliation', 'institution'])
                 if aff_tag:
                     affiliation = aff_tag.get_text(strip=True)
@@ -93,40 +93,40 @@ async def scrape_aaai_page(url: str) -> List[CandidateProfile]:
                     candidates.append(CandidateProfile(
                         name=name,
                         affiliation=affiliation,
-                        role="Invited Speaker" if "invited" in url.lower() else "Technical Track",
+                        role="受邀演讲者" if "invited" in url.lower() else "技术轨道",
                         status="PENDING"
                     ))
         
-        logger.info(f"Scraped {len(candidates)} candidates from {url}")
+        logger.info(f"从{url}抓取了{len(candidates)}位候选人")
         
     except Exception as e:
-        logger.error(f"Error scraping {url}: {str(e)}")
+        logger.error(f"抓取{url}时出错: {str(e)}")
     
     return candidates
 
 
 async def ingestion_node(state: AgentState) -> AgentState:
     """
-    Node 1: Ingestion
-    Fetches AAAI-26 data and populates the candidates list.
+    节点1: 采集
+    获取AAAI-26数据并填充候选人列表
     
     Args:
-        state: Current agent state
+        state: 当前智能体状态
         
     Returns:
-        Updated state with candidates populated
+        已填充候选人的更新状态
     """
-    logger.info(f"[IngestionNode] Starting for job_id={state['job_id']}")
+    logger.info(f"[采集节点] 开始处理 job_id={state['job_id']}")
     
     candidates = []
     
     if settings.APP_ENV == "DEV":
-        # Use mock data in development
-        logger.info("[IngestionNode] Using mock data (DEV mode)")
+        # 开发环境使用模拟数据
+        logger.info("[采集节点] 使用模拟数据 (DEV模式)")
         candidates = MOCK_CANDIDATES.copy()
     else:
-        # Scrape real AAAI pages in production
-        logger.info("[IngestionNode] Scraping AAAI pages (PROD mode)")
+        # 生产环境抓取真实AAAI页面
+        logger.info("[采集节点] 抓取AAAI页面 (PROD模式)")
         
         invited_speakers = await scrape_aaai_page(settings.AAAI_INVITED_SPEAKERS_URL)
         technical_track = await scrape_aaai_page(settings.AAAI_TECHNICAL_TRACK_URL)
@@ -137,7 +137,7 @@ async def ingestion_node(state: AgentState) -> AgentState:
     state["current_index"] = 0
     state["is_complete"] = False
     
-    logger.info(f"[IngestionNode] Loaded {len(candidates)} candidates")
+    logger.info(f"[采集节点] 已加载{len(candidates)}位候选人")
     
     return state
 

@@ -1,43 +1,43 @@
-"""Pydantic models for API Request/Response schemas"""
+"""API请求/响应的Pydantic模型"""
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 from datetime import datetime
 
 
-# Request Models
+# 请求模型
 class CheckPersonRequest(BaseModel):
-    """Request model for single person verification"""
-    name: str = Field(..., description="Full name of the scholar")
-    affiliation: str = Field(..., description="Current affiliation/university")
+    """单人验证的请求模型"""
+    name: str = Field(..., description="学者的全名")
+    affiliation: str = Field(..., description="当前所属单位/大学")
 
 
 class StartJobRequest(BaseModel):
-    """Request model for batch job"""
-    limit: Optional[int] = Field(None, description="Optional limit for testing (processes only N candidates)")
+    """批量任务的请求模型"""
+    limit: Optional[int] = Field(None, description="可选的测试限制（仅处理N个候选人）")
 
 
-# Response Models
+# 响应模型
 class CandidateProfile(BaseModel):
-    """Core data model for a candidate"""
+    """候选人的核心数据模型"""
     name: str
     affiliation: str
-    role: str  # e.g., "Invited Speaker", "Technical Track"
+    role: str  # 例如："受邀演讲者"、"技术轨道"
     status: Literal["PENDING", "SKIPPED", "VERIFIED", "FAILED"] = "PENDING"
     
-    # Verification Results
+    # 验证结果
     homepage: Optional[str] = None
     email: Optional[str] = None
     name_cn: Optional[str] = None
     bachelor_univ: Optional[str] = None
     
-    # Processing Metadata
+    # 处理元数据
     skip_reason: Optional[str] = None
     verification_time: Optional[datetime] = None
 
 
 class CheckPersonResponse(BaseModel):
-    """Response for single person check"""
+    """单人检查的响应"""
     name: str
     affiliation: str
     status: Literal["VERIFIED", "FAILED"]
@@ -49,7 +49,7 @@ class CheckPersonResponse(BaseModel):
 
 
 class StartJobResponse(BaseModel):
-    """Response for job creation"""
+    """任务创建的响应"""
     job_id: str
     message: str
     total_candidates: int
@@ -57,10 +57,10 @@ class StartJobResponse(BaseModel):
 
 
 class JobStatusResponse(BaseModel):
-    """Response for job status query"""
+    """任务状态查询的响应"""
     job_id: str
     status: Literal["RUNNING", "COMPLETED", "FAILED"]
-    progress: int  # Number of candidates processed
+    progress: int  # 已处理的候选人数量
     total: int
     verified_count: int
     failed_count: int

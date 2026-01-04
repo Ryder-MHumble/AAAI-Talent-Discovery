@@ -1,4 +1,4 @@
-"""Search Tool Wrapper using DuckDuckGo"""
+"""使用DuckDuckGo的搜索工具封装"""
 
 from typing import List, Dict, Optional
 from duckduckgo_search import DDGS
@@ -9,18 +9,18 @@ logger = logging.getLogger(__name__)
 
 def search_scholar_homepage(name: str, affiliation: str, max_results: int = 5) -> List[Dict[str, str]]:
     """
-    Search for a scholar's homepage using DuckDuckGo.
+    使用DuckDuckGo搜索学者主页
     
     Args:
-        name: Scholar's full name
-        affiliation: Current affiliation/university
-        max_results: Maximum number of search results to return
+        name: 学者全名
+        affiliation: 当前所属单位/大学
+        max_results: 返回的最大搜索结果数
         
     Returns:
-        List of search results with 'title', 'url', and 'snippet'
+        包含'title'、'url'和'snippet'的搜索结果列表
     """
     query = f'"{name}" "{affiliation}" homepage'
-    logger.info(f"Searching for: {query}")
+    logger.info(f"搜索: {query}")
     
     try:
         with DDGS() as ddgs:
@@ -32,25 +32,25 @@ def search_scholar_homepage(name: str, affiliation: str, max_results: int = 5) -
                     "snippet": result.get("body", "")
                 })
             
-            logger.info(f"Found {len(results)} results for {name}")
+            logger.info(f"为{name}找到{len(results)}个结果")
             return results
             
     except Exception as e:
-        logger.error(f"Search failed for {name}: {str(e)}")
+        logger.error(f"{name}搜索失败: {str(e)}")
         return []
 
 
 def search_with_keywords(name: str, affiliation: str, keywords: Optional[List[str]] = None) -> List[Dict[str, str]]:
     """
-    Enhanced search with additional keywords (e.g., research areas).
+    使用额外关键词进行增强搜索（例如研究领域）
     
     Args:
-        name: Scholar's full name
-        affiliation: Current affiliation
-        keywords: Additional search terms
+        name: 学者全名
+        affiliation: 当前所属单位
+        keywords: 额外搜索词
         
     Returns:
-        List of search results
+        搜索结果列表
     """
     keyword_str = " ".join(keywords) if keywords else ""
     query = f'"{name}" "{affiliation}" {keyword_str} homepage OR profile OR "personal page"'
@@ -66,6 +66,6 @@ def search_with_keywords(name: str, affiliation: str, keywords: Optional[List[st
                 })
             return results
     except Exception as e:
-        logger.error(f"Enhanced search failed: {str(e)}")
+        logger.error(f"增强搜索失败: {str(e)}")
         return []
 

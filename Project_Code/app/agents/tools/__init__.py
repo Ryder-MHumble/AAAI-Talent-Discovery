@@ -7,6 +7,10 @@ from app.agents.tools.verify import (
     semantic_match,
     extract_email_simple
 )
+from app.agents.tools.firecrawl_scraper import (
+    firecrawl_scrape_page,
+    is_firecrawl_enabled
+)
 
 __all__ = [
     "search_scholar_homepage",
@@ -14,6 +18,8 @@ __all__ = [
     "check_url_connectivity",
     "fetch_page_text",
     "semantic_match",
-    "extract_email_simple"
+    "extract_email_simple",
+    "firecrawl_scrape_page",
+    "is_firecrawl_enabled"
 ]
 
