@@ -1,59 +1,48 @@
-# AAAI-26 Talent Hunter - Environment Configuration
-# Copy this file to .env and fill in your actual values
+# AAAI-26 人才猎手 - 环境配置模板
+# 复制此文件为 .env 并填入你的实际密钥
 
 # ========================================
-# SiliconFlow API Configuration
+# SiliconFlow API配置（必需）
 # ========================================
-SILICONFLOW_API_KEY=sk-your-actual-api-key-here
+SILICONFLOW_API_KEY=你的密钥
 SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
-SILICONFLOW_MODEL=deepseek-ai/DeepSeek-V3
+SILICONFLOW_MODEL=Qwen/Qwen2.5-72B-Instruct
 
-# Alternative Models (uncomment to use):
-# SILICONFLOW_MODEL=Qwen/Qwen2.5-72B-Instruct
+# 可选模型：
+# - deepseek-ai/DeepSeek-V3 （推荐，强大但慢一些）
+# - Qwen/Qwen2.5-72B-Instruct （快速）
+# - Qwen/Qwen2.5-32B-Instruct （平衡）
 
 # ========================================
-# Application Settings
+# 应用设置
 # ========================================
-# DEV = Use mock data (5 test candidates)
-# PROD = Scrape real AAAI-26 pages
+# DEV = 使用测试数据（5个模拟候选人，快速验证功能）
+# PROD = 从真实AAAI-26页面抓取
 APP_ENV=DEV
 
 API_VERSION=v1
 CONCURRENT_SEARCHES=3
 
 # ========================================
-# AAAI-26 URLs (for production scraping)
+# AAAI-26 URL地址（生产环境用）
 # ========================================
 AAAI_INVITED_SPEAKERS_URL=https://aaai.org/conference/aaai/aaai-26/invited-speakers/
 AAAI_TECHNICAL_TRACK_URL=https://aaai.org/conference/aaai/aaai-26/technical-track/
 
 # ========================================
-# Firecrawl Configuration (Optional)
+# Firecrawl配置（可选 - 增强抓取）
 # ========================================
-# Enhanced web scraping with JavaScript rendering support
-# Get API key from: https://www.firecrawl.dev/
-# 
-# Benefits:
-# - ✅ Renders JavaScript (React/Vue pages)
-# - ✅ Bypasses anti-scraping (Cloudflare, etc.)
-# - ✅ Auto content cleaning (removes ads/navigation)
-# - ✅ Markdown output (structured format)
-# 
-# Leave empty to use basic httpx scraping (free but limited)
+# 如果遇到很多页面抓取失败，可以启用这个
+# 优势：支持JavaScript渲染、绕过反爬虫
+# 获取密钥：https://www.firecrawl.dev/
+
 FIRECRAWL_API_KEY=
 FIRECRAWL_ENABLED=false
 
-# Set to true to enable Firecrawl (requires API key above)
-# Cost: ~$0.001 per page scrape
-# Recommended for production with 30%+ JavaScript-rendered pages
-
 # ========================================
-# Instructions
+# 快速开始
 # ========================================
-# 1. Get your SiliconFlow API key from: https://cloud.siliconflow.cn/
-# 2. (Optional) Get Firecrawl API key from: https://www.firecrawl.dev/
-# 3. Replace "sk-your-actual-api-key-here" with your actual key
-# 4. Set FIRECRAWL_ENABLED=true to enable enhanced scraping
-# 5. Save this file as .env (without the .txt extension)
-# 6. Run: python app/main.py
-
+# 1. 获取SiliconFlow密钥：https://cloud.siliconflow.cn/
+# 2. 替换上面的"你的密钥"为实际密钥
+# 3. 保存为 .env 文件（去掉.txt后缀）
+# 4. 运行：bash start.sh
