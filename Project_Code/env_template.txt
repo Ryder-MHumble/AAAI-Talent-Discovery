@@ -1,0 +1,37 @@
+# AAAI-26 Talent Hunter - Environment Configuration
+# Copy this file to .env and fill in your actual values
+
+# ========================================
+# SiliconFlow API Configuration
+# ========================================
+SILICONFLOW_API_KEY=sk-your-actual-api-key-here
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+SILICONFLOW_MODEL=deepseek-ai/DeepSeek-V3
+
+# Alternative Models (uncomment to use):
+# SILICONFLOW_MODEL=Qwen/Qwen2.5-72B-Instruct
+
+# ========================================
+# Application Settings
+# ========================================
+# DEV = Use mock data (5 test candidates)
+# PROD = Scrape real AAAI-26 pages
+APP_ENV=DEV
+
+API_VERSION=v1
+CONCURRENT_SEARCHES=3
+
+# ========================================
+# AAAI-26 URLs (for production scraping)
+# ========================================
+AAAI_INVITED_SPEAKERS_URL=https://aaai.org/conference/aaai/aaai-26/invited-speakers/
+AAAI_TECHNICAL_TRACK_URL=https://aaai.org/conference/aaai/aaai-26/technical-track/
+
+# ========================================
+# Instructions
+# ========================================
+# 1. Get your SiliconFlow API key from: https://cloud.siliconflow.cn/
+# 2. Replace "sk-your-actual-api-key-here" with your actual key
+# 3. Save this file as .env (without the .txt extension)
+# 4. Run: python app/main.py
+
