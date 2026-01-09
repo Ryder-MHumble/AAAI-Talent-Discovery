@@ -31,6 +31,18 @@ class CandidateProfile(BaseModel):
     name_cn: Optional[str] = None
     bachelor_univ: Optional[str] = None
     
+    # 新增：国家/地区、职位、研究方向、个人主页
+    country_region: Optional[str] = None  # 单位所属国家/地区
+    position: Optional[str] = None  # 职位
+    research_interests: Optional[List[str]] = None  # 研究方向
+    interests: Optional[List[str]] = None  # AMiner interests
+    
+    # AMiner集成字段
+    aminer_id: Optional[str] = None  # AMiner中的学者ID
+    organization_cn: Optional[str] = None  # 机构中文名称
+    education: Optional[List[Dict]] = None  # 教育背景
+    positions: Optional[List[Dict]] = None  # 职位历史
+    
     # 处理元数据
     skip_reason: Optional[str] = None
     verification_time: Optional[datetime] = None

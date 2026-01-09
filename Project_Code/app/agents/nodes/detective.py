@@ -1,10 +1,12 @@
-"""侦探节点 - 搜索并发现候选人主页"""
+"""侦探节点 - 搜索并发现候选人主页，集成AMiner学者验证"""
 
 import logging
 from typing import Optional
 
 from app.agents.state import AgentState
 from app.agents.tools.search import search_scholar_homepage
+from app.agents.tools.aminer_api import aminer_api
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +71,13 @@ async def detective_node(state: AgentState) -> AgentState:
     """
     节点3: 侦探
     使用搜索引擎搜索当前候选人的主页
+    可选：集成AMiner API进行学者身份验证和信息补充
     一次处理一个PENDING候选人
+    
+    处理流程：
+    1. 尝试通过AMiner API验证候选人身份（如果启用）
+    2. 如果AMiner验证失败或未启用，使用DuckDuckGo搜索主页
+    3. 补充候选人信息
     
     Args:
         state: 当前智能体状态
@@ -85,9 +93,44 @@ async def detective_node(state: AgentState) -> AgentState:
         candidate = candidates[current_index]
         
         if candidate.status == "PENDING":
-            logger.info(f"[侦探节点] 处理 #{current_index}: {candidate.name}")
+            logger.info(f"[侦探节点] 处理 #{current_index}: {candidate.name} ({candidate.affiliation})")
             
-            # 搜索主页
+            # 步骤1: 尝试使用AMiner API进行验证和补充（如果启用）
+            aminer_enriched = False
+            if settings.AMINER_ENABLED and settings.AMINER_API_KEY:
+                try:
+                    logger.info(f"[侦探节点] 尝试AMiner验证: {candidate.name}")
+                    aminer_result = await aminer_api.validate_and_enrich(
+                        name=candidate.name,
+                        affiliation=candidate.affiliation,
+                        email=candidate.email
+                    )
+                    
+                    if aminer_result and aminer_result.get("is_verified"):
+                        # 成功验证并补充信息
+                        candidate.name_cn = aminer_result.get("name_cn")
+                        candidate.email = aminer_result.get("email") or candidate.email
+                        
+                        # 存储interests作为研究方向补充
+                        if not hasattr(candidate, 'interests'):
+                            candidate.interests = []
+                        candidate.interests.extend(aminer_result.get("interests", []))
+                        
+                        # 存储AMiner ID用于后续参考
+                        if not hasattr(candidate, 'aminer_id'):
+                            candidate.aminer_id = None
+                        candidate.aminer_id = aminer_result.get("aminer_id")
+                        
+                        logger.info(f"[侦探节点] AMiner验证成功: {candidate.name} (置信度: {aminer_result.get('confidence_score', 0):.2f})")
+                        aminer_enriched = True
+                    else:
+                        reason = aminer_result.get("reason", "unknown") if aminer_result else "api_error"
+                        logger.debug(f"[侦探节点] AMiner未找到匹配或置信度低: {candidate.name} ({reason})")
+                        
+                except Exception as e:
+                    logger.warning(f"[侦探节点] AMiner API异常: {str(e)}")
+            
+            # 步骤2: 使用DuckDuckGo搜索主页（AMiner成功或未启用时都需要搜索主页）
             search_results = search_scholar_homepage(candidate.name, candidate.affiliation)
             
             if search_results:
@@ -97,14 +140,21 @@ async def detective_node(state: AgentState) -> AgentState:
                 if best_url:
                     candidate.homepage = best_url
                     logger.info(f"[侦探节点] 找到URL: {best_url}")
+                    # 如果找到主页，更新状态为继续处理
+                    candidate.status = "PENDING"  # 等待审计节点处理
                 else:
                     logger.warning(f"[侦探节点] 搜索结果中没有找到合适的URL")
                     candidate.status = "FAILED"
                     candidate.skip_reason = "搜索结果中未找到合适的主页"
             else:
-                logger.warning(f"[侦探节点] 搜索未返回结果")
-                candidate.status = "FAILED"
-                candidate.skip_reason = "搜索未返回结果"
+                if aminer_enriched:
+                    # 即使主页搜索失败，如果AMiner验证成功，仍然继续处理
+                    logger.info(f"[侦探节点] DuckDuckGo搜索无结果，但AMiner验证成功，继续处理")
+                    candidate.status = "PENDING"
+                else:
+                    logger.warning(f"[侦探节点] 搜索未返回结果")
+                    candidate.status = "FAILED"
+                    candidate.skip_reason = "搜索未返回结果"
             
             # 移动到下一个候选人
             state["current_index"] = current_index + 1

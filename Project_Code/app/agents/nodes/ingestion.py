@@ -8,8 +8,10 @@ import logging
 from app.agents.state import AgentState
 from app.api.models import CandidateProfile
 from app.core.config import settings
+from app.agents.tools.aaai_scraper import scrape_all_aaai_sources
 
 logger = logging.getLogger(__name__)
+
 
 
 # 开发环境的模拟数据
@@ -51,64 +53,30 @@ async def scrape_aaai_page(url: str) -> List[CandidateProfile]:
     """
     抓取AAAI网站以提取候选人信息
     
+    此函数已弃用 - 请使用 app.agents.tools.aaai_scraper 中的专用函数
+    保留用于向后兼容性。
+    
     Args:
         url: AAAI页面URL
         
     Returns:
         CandidateProfile对象列表
     """
-    candidates = []
-    
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url)
-            
-            if response.status_code != 200:
-                logger.error(f"获取{url}失败: {response.status_code}")
-                return candidates
-            
-            soup = BeautifulSoup(response.text, 'lxml')
-            
-            # 这是一个占位解析器 - 实际实现取决于AAAI的HTML结构
-            # 查找常见模式如:
-            # - <h3>或<h4>标签用于姓名
-            # - 相邻的<p>或<span>用于所属单位
-            
-            # 示例解析逻辑（根据实际HTML结构调整）
-            for item in soup.find_all(['div', 'li'], class_=['speaker', 'author', 'participant']):
-                name = None
-                affiliation = None
-                
-                # 尝试提取姓名
-                name_tag = item.find(['h3', 'h4', 'strong', 'b'])
-                if name_tag:
-                    name = name_tag.get_text(strip=True)
-                
-                # 尝试提取所属单位
-                aff_tag = item.find(['p', 'span', 'em'], class_=['affiliation', 'institution'])
-                if aff_tag:
-                    affiliation = aff_tag.get_text(strip=True)
-                
-                if name and affiliation:
-                    candidates.append(CandidateProfile(
-                        name=name,
-                        affiliation=affiliation,
-                        role="受邀演讲者" if "invited" in url.lower() else "技术轨道",
-                        status="PENDING"
-                    ))
-        
-        logger.info(f"从{url}抓取了{len(candidates)}位候选人")
-        
-    except Exception as e:
-        logger.error(f"抓取{url}时出错: {str(e)}")
-    
-    return candidates
+    # 转发到新的爬虫工具
+    logger.warning("[采集节点] scrape_aaai_page已弃用，请使用aaai_scraper.py中的专用函数")
+    return []
 
 
 async def ingestion_node(state: AgentState) -> AgentState:
     """
     节点1: 采集
     获取AAAI-26数据并填充候选人列表
+    
+    支持的数据来源：
+    1. Invited Speakers - 特邀演讲者
+    2. Bridge Program - Bridge Committee成员
+    3. Tutorials and Labs - 讲师和指导员
+    4. Workshops - Workshop组织者
     
     Args:
         state: 当前智能体状态
@@ -125,13 +93,21 @@ async def ingestion_node(state: AgentState) -> AgentState:
         logger.info("[采集节点] 使用模拟数据 (DEV模式)")
         candidates = MOCK_CANDIDATES.copy()
     else:
-        # 生产环境抓取真实AAAI页面
-        logger.info("[采集节点] 抓取AAAI页面 (PROD模式)")
+        # 生产环境抓取真实AAAI页面（多个来源）
+        logger.info("[采集节点] 从多个AAAI页面源抓取数据 (PROD模式)")
         
-        invited_speakers = await scrape_aaai_page(settings.AAAI_INVITED_SPEAKERS_URL)
-        technical_track = await scrape_aaai_page(settings.AAAI_TECHNICAL_TRACK_URL)
-        
-        candidates = invited_speakers + technical_track
+        try:
+            candidates = await scrape_all_aaai_sources(
+                invited_speakers_url=settings.AAAI_INVITED_SPEAKERS_URL,
+                bridge_program_url=settings.BRIDGE_PROGRAM_URL,
+                tutorials_url=settings.TUTORIALS_LABS_URL,
+                workshops_url=settings.WORKSHOPS_URL
+            )
+        except Exception as e:
+            logger.error(f"[采集节点] 从AAAI页面抓取数据失败: {str(e)}")
+            # 降级到模拟数据
+            logger.warning("[采集节点] 降级到模拟数据")
+            candidates = MOCK_CANDIDATES.copy()
     
     state["candidates"] = candidates
     state["current_index"] = 0
